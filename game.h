@@ -3,14 +3,15 @@
 #include <vector>
 using namespace std;
 
-//#include "board.h"
+#include "board.h"
 class game {
 	private:
 		int played, win1, ties, win2;
-		//board gameboard
-		
+		board gameboard
 	public:
 		game();
+		game(vector<moves>);
+		game(game);
 		~game();
 		
 }

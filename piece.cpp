@@ -17,11 +17,37 @@ class piece
 		void test();		
 		friend ostream& operator<<(ostream&, const piece&);		
 		char get_name() const;
+		int get_val() const;
+		int get_team() const;
 	private:
 		int team, captures;
 		piece_type type;
 };
 
+int piece::get_val() const
+{
+	switch(this->type)
+	{
+		case KING:
+			return 1<<31;
+		case QUEEN:
+			return 9;
+		case ROOK:
+			return 5;
+		case BISHOP:
+			return 3;
+		case KNIGHT:
+			return 3;
+		case PAWN:
+			return 1;
+		default:
+			return 0;
+	}
+}
+int piece::get_team() const
+{
+	return this->team;
+}
 
 piece::piece()
 {

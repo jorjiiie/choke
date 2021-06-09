@@ -22,6 +22,7 @@ class board
 		void print_board();
 		piece& operator()(COL, int);
 		void manual(COL, int);
+		int eval() const;
 	private:
 		// 0, 0 is A8
 		// 1, 0 is A7
@@ -60,6 +61,22 @@ void board::print_board()
 void board::manual(COL c, int r)
 {
 	g_b[7-r][c].set_team(1);
+}
+int board::eval() const
+{
+	// lame evaluation that does 1,3,3,5,9 values and king is pretty much infinity
+	int scores[2];
+	scores[0]=scores[1]=0;
+	for (int i=0;i<8;i++)
+	{
+		for (int j=0;j<8;j++)
+		{
+			scores[g_b[i][j].get_team()]+=g_b[i][j].get_val();
+		}
+	}
+	return scores[1]-scores[0]; // positive is in favor of computer, negative in favor of player
+	
+	
 }
 int main()
 {

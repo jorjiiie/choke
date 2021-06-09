@@ -9,12 +9,12 @@ using namespace std;
 
 enum COL { A, B, C, D, E, F, G, H};
 
-struct move
+struct
 {
 	//UHHH so we need a move that has the basic movements setup + the board that has the actual ones like QxD6 or something instead of QD6
 	pair<COL, int> from;
 	pair<COL, int> to;
-} move;
+}move;
 class board
 {
 	public:

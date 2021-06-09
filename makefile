@@ -1,4 +1,4 @@
-main:
-	rm -f main.out
-	g++ main.cpp -o main.out
-	./main.out
+board:
+	rm -f board.out
+	g++ board.cpp -o board.out
+	./board.out

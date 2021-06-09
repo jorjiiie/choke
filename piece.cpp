@@ -27,7 +27,7 @@ piece::piece()
 {
 	team = 0;
 	captures = 0;
-	type = piece_type::PAWN;
+	type = piece_type::NONE;
 }
 
 piece::piece(piece_type tp)

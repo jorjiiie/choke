@@ -49,7 +49,7 @@ void piece::test()
 {
 	
 	cout << "AHSJDASD\n";
-	cout << type << " " << team <<"\n";
+cout << type << " " << team <<"\n";
 }
 /*
 int main()
@@ -60,7 +60,6 @@ int main()
 */
 char piece::get_name() const
 {
-//	cerr << this->type << " TYPE\n";
 	switch(this->type)
 	{
 		case KING:
@@ -89,8 +88,8 @@ ostream& operator<<(ostream& stream, const piece& p)
 		stream << "30";
 //	cerr << "TYPE IS " << p.type << "\n";
 	stream << 'm';
-	stream << string(1,p.get_name());
 	stream << "\033[0m";
+	stream << p.get_name();
 	return stream;
 }
 void piece::set_team(int j)

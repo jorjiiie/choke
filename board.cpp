@@ -9,12 +9,21 @@ using namespace std;
 
 enum COL { A, B, C, D, E, F, G, H};
 
-struct
+// crying idk how to do stuff :((((
+struct mv
 {
 	//UHHH so we need a move that has the basic movements setup + the board that has the actual ones like QxD6 or something instead of QD6
 	pair<COL, int> from;
 	pair<COL, int> to;
-}move;
+	piece p1, p2;
+	mv(pair<COL, int> f, pair<COL, int> t, piece& a, piece& b)
+	{
+		from = f;
+		to = t;
+		p1 = a;
+		p2 = b;
+	}
+};
 class board
 {
 	public:
@@ -23,13 +32,21 @@ class board
 		piece& operator()(COL, int);
 		void manual(COL, int);
 		int eval() const;
+		bool verify_straight(COL, int, COL, int);
+		bool verify_pawn(COL, int, COL, int);
+		bool verify_diagonal(COL, int, COL, int);
+		bool in_check(int);
+		bool legal_move(COL, int, COL, int, int);
+		bool move(COL, int, COL, int);
+		bool make_move(COL, int, COL, int);
+
 	private:
 		// 0, 0 is A8
 		// 1, 0 is A7
 		// 7, 0 is A1
 		// 7, 7 is H1
 		piece g_b[8][8];
-		
+		vector<mv> past_moves;
 };
 board::board()
 {
@@ -38,9 +55,9 @@ board::board()
 piece& board::operator()(COL c, int row)
 {
 	// A -> [][0];
-	// XJ -> [7-J][X]
-	// A1 -> [7][X]
-	return g_b[7-row][c];
+	// XJ -> [8-J][X]
+	// A1 -> [8][0]
+	return g_b[8-row][c];
 }
 void board::print_board()
 {
@@ -53,7 +70,7 @@ void board::print_board()
 			if ((i^j)&1) cout << "\033[101;";
 			else cout << "\033[102;";
 			cout << "1;";
-			cout <<  g_b[i][j];
+			cout <<  g_b[i][j].to_col();
 		}
 		cout << "\n";
 	}
@@ -78,6 +95,133 @@ int board::eval() const
 	
 	
 }
+bool board::verify_straight(COL f_c, int f_r, COL t_c, int t_r)
+{
+	if (f_r == t_r)
+	{
+		COL min_c = min(f_c, t_c);
+		COL max_c = max(f_c, t_c);
+		for (int j = min_c; j < max_c; j++)
+			if ((*this)((COL)j,f_r).is_piece()) return false;
+		return true;
+	} 
+	else 
+	{
+		int min_r = min(f_r,t_r);
+		int max_r = max(f_r,t_r);
+		for (int j = min_r; j < max_r; j++)
+			if ((*this)(f_c,j).is_piece()) return false;
+		return true;
+	}
+
+}
+
+bool board::verify_pawn(COL f_c, int f_r, COL t_c, int t_r)
+{
+	cerr << "PAWN MOVE\n";
+	// has to be +/-2
+	// team 1 (white) can only be neg 
+	// team 0 (black) should be positive
+	cerr << (*this)(f_c,f_r).get_move_count() << "\n";
+	if ((*this)(f_c,f_r).get_team()==1)
+	{
+		if (f_r - t_r == -1) return true;
+		if (f_r - t_r == -2) 
+			return (*this)(f_c,f_r).get_move_count() == 0;
+	} 
+	else
+	{
+		if (f_r - t_r == 1) return true;
+		if (f_r - t_r == 2) 
+			return (*this)(f_c,f_r).get_move_count() == 0;
+	}
+	return false;
+
+}
+bool board::verify_diagonal(COL f_c, int f_r, COL t_c, int t_r)
+{
+	int col_mod, row_mod;
+	// going up
+	if (f_c < t_c) col_mod = 1;
+	else col_mod = -1; // going down
+
+	if (f_r < t_r) row_mod = 1;
+	else row_mod = -1;
+
+	for (int i = f_c, j = f_r; (COL)i != t_c && j != t_r; i+=col_mod, j+=row_mod)
+	{
+		if ((*this)((COL)i,j).is_piece()) return false;
+	}
+	return true;
+}
+bool board::in_check(int team)
+{
+	return false;
+	// find position of king, then look in all move types
+
+}
+bool board::legal_move(COL f_c, int f_r, COL t_c, int t_r, int team)
+{
+	if (move(f_c,f_r,t_c,t_r) && (!in_check(team)))
+	{
+		past_moves.push_back(mv(make_pair(f_c,f_r),make_pair(t_c,t_r),(*this)(f_c,f_r),(*this)(t_c,t_r)));
+		(*this)(t_c,t_r)=(*this)(f_c,f_r);
+		(*this)(f_c,f_r) = piece();
+		return true;
+	}
+	cerr << "BAD\n";
+	return false;
+}
+bool board::move(COL f_c, int f_r, COL t_c, int t_r)
+{
+	//oob
+	if (f_c < A || f_c > H || t_c < A || t_c > H) return false;
+	if (f_r < 1 || f_r > 8 || t_r < 1 || t_r > 8) return false;
+
+	if ((*this)(t_c,t_r).get_team() == (*this)(f_c,f_r).get_team()) return false;
+
+	if (f_c == t_c || f_r == t_r)
+	{
+		// vertical
+		switch((*this)(f_c,f_r).get_type())
+		{
+			case QUEEN:
+				return verify_straight(f_c,f_r,t_c,t_r);
+			case ROOK:
+				return verify_straight(f_c,f_r,t_c,t_r);
+			case PAWN:
+				return f_c == t_c && verify_pawn(f_c,f_r,t_c,t_r);
+			case KING:
+				{
+					// check castling too :((
+					if (f_c == t_c)
+						return abs(f_r-t_r) == 1;
+					else
+						return abs(f_c-t_c) == 1;
+
+				}
+			default:
+				return false; // bushop and kngiht canont mooov straight up or duun
+		}
+	}
+	// move has to be diagonal or knight
+	cerr << "NOT STRAIGHT\n";
+	if (abs(f_c - t_c) == abs(f_r - t_r) && (*this)(f_c,f_r).get_type() == BISHOP)
+	{
+		// digaonal
+		return verify_diagonal(f_c,f_r,t_c,t_r);
+	}
+	// has to be kngith i think
+
+	if ((*this)(f_c,f_r).get_type() != KNIGHT) return false;
+	cerr << "KNIGHT MOVE\n";
+	int dx = abs(f_c - t_c);
+	int dy = abs(f_r - t_r);
+	return (dx == 2 && dy ==1) || (dx == 1 && dy == 2);
+}	
+
+
+
 int main()
 {
 	cout << "hello\n";
@@ -85,45 +229,43 @@ int main()
 	for (int i=0; i<8; i++)
 	{
 		COL j = (COL)i;
-		joe(j, 1).change_type(PAWN);
-		joe(j,1).set_team(1);
-		joe(j, 6).change_type(PAWN);
+		joe(j, 2).change_type(PAWN);
+		joe(j, 2).set_team(1);
+		joe(j, 7).change_type(PAWN);
+		joe(j, 7).set_team(0);
 
 	}
 	// add uncool pieces
-	for (int i=0; i<8; i+=7)
+	for (int i=1; i<=8; i+=7)
 	{
 		joe(A, i).change_type(ROOK);
-		joe(A, i).set_team(!i&1);
+		joe(A, i).set_team(i&1);
 		joe(B, i).change_type(KNIGHT);
-		joe(B, i).set_team(!i&1);
+		joe(B, i).set_team(i&1);
 		joe(C, i).change_type(BISHOP);
-		joe(C, i).set_team(!i&1);
+		joe(C, i).set_team(i&1);
 		joe(D, i).change_type(QUEEN);
-		joe(D, i).set_team(!i&1);
+		joe(D, i).set_team(i&1);
 		joe(E, i).change_type(KING);
-		joe(E, i).set_team(!i&1);
+		joe(E, i).set_team(i&1);
 		joe(F, i).change_type(BISHOP);
-		joe(F, i).set_team(!i&1);
+		joe(F, i).set_team(i&1);
 		joe(G, i).change_type(KNIGHT);
-		joe(G, i).set_team(!i&1);
+		joe(G, i).set_team(i&1);
 		joe(H, i).change_type(ROOK);
-		joe(H, i).set_team(!i&1);
+		joe(H, i).set_team(i&1);
 	}
-	// joe.manual(COL::A,5);
-	// (joe(COL::A,5)).set_team(1);
-	// joe(A,5).change_type(ROOK);
-	// for (int i=0;i<4;i++)
-	// {
-	// 	joe(A,i+2).change_type(NONE);
-	// 	joe(B,i+2).change_type(NONE);
-	// 	joe(C,i+2).change_type(NONE);
-	// 	joe(D,i+2).change_type(NONE);
-	// 	joe(E,i+2).change_type(NONE);
-	// 	joe(F,i+2).change_type(NONE);
-	// 	joe(G,i+2).change_type(NONE);
-	// 	joe(H,i+2).change_type(NONE);
-	// }
+
 	joe.print_board();
 	cout << joe.eval() << "\n";
+
+	cout << "\n\njoe";
+	cout << "\n" << joe(A,1) << "\n";
+	// vector<int> m = joe(A,2).get_moves();
+	// for (int i=0;i<m.size();i++) cout << i << " " << m[i] << "\n";
+	char f,t;
+	int a,b;
+	cin >> f >> a >> t >> b;
+	joe.legal_move((COL)(f-'A'),a,(COL)(t-'A'),b,1);
+	joe.print_board();
 }

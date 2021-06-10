@@ -11,6 +11,7 @@ class piece
 		piece();
 		piece(piece_type);
 		piece(piece_type, int);
+		piece(const piece&);
 		void set_team(int);
 		void change_type(piece_type); // pawn promotion - could make a new one but who cares
 		vector<int> get_moves();
@@ -19,11 +20,25 @@ class piece
 		char get_name() const;
 		int get_val() const;
 		int get_team() const;
+		void inc_move_count();
+		int get_move_count() const; // for pawn 2x move & castling
+		bool is_piece() const; // for empty tiles
+		string to_col() const;
+		piece_type get_type() const;
+
 	private:
-		int team, captures;
+		int team, captures, move_count, last_move; // last move is for en passant :(
 		piece_type type;
 };
 
+piece::piece(const piece& o)
+{
+	this->team = o.team;
+	this->captures = o.captures;
+	this->move_count = o.move_count;
+	this->last_move = o.last_move;
+	this->type = o.type;
+}
 int piece::get_val() const
 {
 	switch(this->type)
@@ -51,16 +66,18 @@ int piece::get_team() const
 
 piece::piece()
 {
-	team = 0;
+	team = -1;
 	captures = 0;
 	type = piece_type::NONE;
+	move_count = 0;
 }
 
 piece::piece(piece_type tp)
 {
-	team = 0;
+	team = -1;
 	captures = 0;
 	type = tp;
+	move_count = 0;
 }
 
 piece::piece(piece_type tp, int t)
@@ -68,6 +85,7 @@ piece::piece(piece_type tp, int t)
 	team = t;
 	captures = 0;
 	type = tp;
+	move_count = 0;
 }
 
 
@@ -108,15 +126,7 @@ char piece::get_name() const
 }
 ostream& operator<<(ostream& stream, const piece& p)
 {
-	// for now, BLUE for team 0, red for team 1
-	if (p.team)
-		stream << "97";
-	else 
-		stream << "30";
-//	cerr << "TYPE IS " << p.type << "\n";
-	stream << 'm';
-	stream << string(1,p.get_name());
-	stream << "\033[0m";
+	stream << "[" << p.team << ", " << p.get_name() << "]";
 	return stream;
 }
 void piece::set_team(int j)
@@ -126,4 +136,64 @@ void piece::set_team(int j)
 void piece::change_type(piece_type tp)
 {
 	type = tp;
+}
+void piece::inc_move_count()
+{
+	this->move_count++;
+}
+int piece::get_move_count() const
+{
+	return this->move_count;
+}
+bool piece::is_piece() const
+{
+	return this->type != NONE;
+}
+vector<int> piece::get_moves()
+{
+	vector<int> j(6);
+	switch(this->type)
+	{
+		case KING:
+			j[0]=1;
+			break;
+		case QUEEN:
+			j[1]=j[2]=1;
+			break;
+		case ROOK:
+			j[1]=1;
+			break;
+		case BISHOP:
+			j[2]=1;
+			break;
+		case KNIGHT:
+			j[3]=1;
+			break;
+		case PAWN:
+			j[4]=1;
+			break;
+		default:
+			j[5]=69;
+
+	}
+	return j;
+}
+
+string piece::to_col() const
+{
+	string ret = "";
+	// for now, BLUE for team 0, red for team 1
+	if (this->team)
+		ret+= "97";
+	else 
+		ret += "30";
+	//	cerr << "TYPE IS " << p.type << "\n";
+	ret+='m';
+	ret+= string(1,this->get_name());
+	ret +="\033[0m";
+	return ret;
+}
+piece_type piece::get_type() const
+{
+	return this->type;
 }

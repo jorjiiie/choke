@@ -86,19 +86,29 @@ int main()
 	{
 		COL j = (COL)i;
 		joe(j, 1).change_type(PAWN);
+		joe(j,1).set_team(1);
 		joe(j, 6).change_type(PAWN);
+
 	}
 	// add uncool pieces
 	for (int i=0; i<8; i+=7)
 	{
 		joe(A, i).change_type(ROOK);
+		joe(A, i).set_team(!i&1);
 		joe(B, i).change_type(KNIGHT);
+		joe(B, i).set_team(!i&1);
 		joe(C, i).change_type(BISHOP);
+		joe(C, i).set_team(!i&1);
 		joe(D, i).change_type(QUEEN);
+		joe(D, i).set_team(!i&1);
 		joe(E, i).change_type(KING);
+		joe(E, i).set_team(!i&1);
 		joe(F, i).change_type(BISHOP);
+		joe(F, i).set_team(!i&1);
 		joe(G, i).change_type(KNIGHT);
+		joe(G, i).set_team(!i&1);
 		joe(H, i).change_type(ROOK);
+		joe(H, i).set_team(!i&1);
 	}
 	// joe.manual(COL::A,5);
 	// (joe(COL::A,5)).set_team(1);
@@ -115,4 +125,5 @@ int main()
 	// 	joe(H,i+2).change_type(NONE);
 	// }
 	joe.print_board();
+	cout << joe.eval() << "\n";
 }

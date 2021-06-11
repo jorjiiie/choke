@@ -39,7 +39,7 @@ class board
 		bool legal_move(COL, int, COL, int, int);
 		bool move(COL, int, COL, int);
 		bool make_move(COL, int, COL, int);
-
+		
 	private:
 		// 0, 0 is A8
 		// 1, 0 is A7
@@ -64,6 +64,7 @@ void board::print_board()
 	cout << "hahsn" << endl;
 	for (int i=0;i<8;i++) 
 	{
+		cout << (8-i) << " ";
 		for (int j=0;j<8;j++)
 		{
 			//cout << "a ";
@@ -74,6 +75,7 @@ void board::print_board()
 		}
 		cout << "\n";
 	}
+	cout << "  ABCDEFGH\n";
 }
 void board::manual(COL c, int r)
 {
@@ -101,7 +103,7 @@ bool board::verify_straight(COL f_c, int f_r, COL t_c, int t_r)
 	{
 		COL min_c = min(f_c, t_c);
 		COL max_c = max(f_c, t_c);
-		for (int j = min_c; j < max_c; j++)
+		for (int j = min_c + 1; j < max_c; j++)
 			if ((*this)((COL)j,f_r).is_piece()) return false;
 		return true;
 	} 
@@ -109,7 +111,7 @@ bool board::verify_straight(COL f_c, int f_r, COL t_c, int t_r)
 	{
 		int min_r = min(f_r,t_r);
 		int max_r = max(f_r,t_r);
-		for (int j = min_r; j < max_r; j++)
+		for (int j = min_r + 1; j < max_r; j++)
 			if ((*this)(f_c,j).is_piece()) return false;
 		return true;
 	}
@@ -123,17 +125,18 @@ bool board::verify_pawn(COL f_c, int f_r, COL t_c, int t_r)
 	// team 1 (white) can only be neg 
 	// team 0 (black) should be positive
 	cerr << (*this)(f_c,f_r).get_move_count() << "\n";
+	if ((*this)(t_c,t_r).is_piece()) return false;
 	if ((*this)(f_c,f_r).get_team()==1)
 	{
 		if (f_r - t_r == -1) return true;
 		if (f_r - t_r == -2) 
-			return (*this)(f_c,f_r).get_move_count() == 0;
+			return (*this)(f_c,f_r).get_move_count() == 0 && !(*this)(f_c,f_r+1).is_piece();
 	} 
 	else
 	{
 		if (f_r - t_r == 1) return true;
 		if (f_r - t_r == 2) 
-			return (*this)(f_c,f_r).get_move_count() == 0;
+			return (*this)(f_c,f_r).get_move_count() == 0 && !(*this)(f_c,f_r-1).is_piece();
 	}
 	return false;
 
@@ -147,9 +150,11 @@ bool board::verify_diagonal(COL f_c, int f_r, COL t_c, int t_r)
 
 	if (f_r < t_r) row_mod = 1;
 	else row_mod = -1;
-
-	for (int i = f_c, j = f_r; (COL)i != t_c && j != t_r; i+=col_mod, j+=row_mod)
+	
+	cerr << "diagonal " << col_mod << " " << row_mod << "\n";
+	for (int i = f_c + col_mod, j = f_r + row_mod; (COL)i != t_c && j != t_r; i+=col_mod, j+=row_mod)
 	{
+		cerr << "COLUMN " << i << " ROW" << j << "\n";
 		if ((*this)((COL)i,j).is_piece()) return false;
 	}
 	return true;
@@ -165,6 +170,7 @@ bool board::legal_move(COL f_c, int f_r, COL t_c, int t_r, int team)
 	if (move(f_c,f_r,t_c,t_r) && (!in_check(team)))
 	{
 		past_moves.push_back(mv(make_pair(f_c,f_r),make_pair(t_c,t_r),(*this)(f_c,f_r),(*this)(t_c,t_r)));
+		(*this)(f_c,f_r).inc_move_count();
 		(*this)(t_c,t_r)=(*this)(f_c,f_r);
 		(*this)(f_c,f_r) = piece();
 		return true;
@@ -206,7 +212,7 @@ bool board::move(COL f_c, int f_r, COL t_c, int t_r)
 	}
 	// move has to be diagonal or knight
 	cerr << "NOT STRAIGHT\n";
-	if (abs(f_c - t_c) == abs(f_r - t_r) && (*this)(f_c,f_r).get_type() == BISHOP)
+	if (abs(f_c - t_c) == abs(f_r - t_r) && ((*this)(f_c,f_r).get_type() == BISHOP || (*this)(f_c,f_r).get_type() == QUEEN) )
 	{
 		// digaonal
 		return verify_diagonal(f_c,f_r,t_c,t_r);
@@ -257,15 +263,17 @@ int main()
 	}
 
 	joe.print_board();
-	cout << joe.eval() << "\n";
+	//cout << joe.eval() << "\n";
 
-	cout << "\n\njoe";
-	cout << "\n" << joe(A,1) << "\n";
+	//cout << "\n\njoe";
+	//cout << "\n" << joe(A,1) << "\n";
 	// vector<int> m = joe(A,2).get_moves();
 	// for (int i=0;i<m.size();i++) cout << i << " " << m[i] << "\n";
-	char f,t;
-	int a,b;
-	cin >> f >> a >> t >> b;
-	joe.legal_move((COL)(f-'A'),a,(COL)(t-'A'),b,1);
-	joe.print_board();
+	while(true)
+	{
+		string a,b;
+		cin >> a >> b;
+		joe.legal_move((COL)(a[0]-'A'),a[1]-'0',(COL)(b[0]-'A'),b[1]-'0',1);
+		joe.print_board();
+	}
 }

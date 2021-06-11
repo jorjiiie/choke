@@ -28,6 +28,7 @@ class board
 {
 	public:
 		board(); // basic game
+		board(const board& );
 		void print_board();
 		piece& operator()(COL, int);
 		void manual(COL, int);
@@ -51,6 +52,13 @@ class board
 board::board()
 {
 	// there's actually nothing to do... love jesus
+}
+board::board(const board& b)
+{
+	for (int i=0;i<8;i++)
+		for (int j=0;j<8;j++)
+			this->g_b[i][j]=b.g_b[i][j];
+	this->past_moves = b.past_moves;
 }
 piece& board::operator()(COL c, int row)
 {

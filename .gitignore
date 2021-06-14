@@ -39,3 +39,5 @@
 #ryans stuff
 *.cpp.swp
 *.cpp.swo
+*.h.swp
+*.h.swo

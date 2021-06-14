@@ -1,3 +1,9 @@
+/*
+	Authors: Theo Kreuger, Ryan Zhu
+	piece class that is base piece of chess game
+	has some extra stats like moves for 2 tile pawn move and castling, kills for why not, last move for en passant, etc 
+*/
+
 #include <iostream>
 #include <vector>
 
@@ -151,29 +157,37 @@ bool piece::is_piece() const
 }
 vector<int> piece::get_moves()
 {
-	vector<int> j(6);
+	vector<int> j;
 	switch(this->type)
 	{
+		// computer won't make any special moves like castling or en passant
 		case KING:
-			j[0]=1;
+			// king move
+			j.push_back(0);
 			break;
 		case QUEEN:
-			j[1]=j[2]=1;
+			// rook + bishop moves
+			j.push_back(1);
+			j.push_back(2);
 			break;
 		case ROOK:
-			j[1]=1;
+			// rook moves
+			j.push_back(1);
 			break;
 		case BISHOP:
-			j[2]=1;
+			// bishop moves
+			j.push_back(2);
 			break;
 		case KNIGHT:
-			j[3]=1;
+			// cool knight move
+			j.push_back(3);
 			break;
 		case PAWN:
-			j[4]=1;
+			// pawn move
+			j.push_back(4);
 			break;
 		default:
-			j[5]=69;
+			break;
 
 	}
 	return j;

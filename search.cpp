@@ -8,10 +8,15 @@ using namespace std;
 #ifndef CALCULATE_LIMIT
 #define CALCULATE_LIMIT 69
 #endif
+
+#ifndef INITIAL_INTEREST
+#define INITIAL_INTEREST 5
+#endif
+
 // implements the worst stochastic engine you'll ever see
 
 double expected_delta(board, int, double, int, int*);
-void best_moves(board&, int, double, int*, clock_t&, int, mv, int);
+void best_moves(board&, int, double, int&, clock_t&, int&, mv&, mv&);
 mv make_move(board, int);
 void init_search();
 
@@ -20,12 +25,26 @@ void init_search();
 
 // }
 
-void best_moves(board& b, int team, double interest, int* evaluated, clock_t& start, int best, mv to_go, int current_val)
+void best_moves(board& b, int team, double interest, int& evaluated, clock_t& start, int& best, mv& to_go, mv& best_move)
 {
 	// need a depth or number of searches probably
 	// check if in check - then we just do every 1 depth move and do the 'best' one LOL LOL LOL LOL	
 
-	if (*evaluated > CALCULATE_LIMIT || (double)(clock() - start) / CLOCKS_PER_SEC > 10) return;
+	if (evaluated > CALCULATE_LIMIT || (double)(clock() - start) / CLOCKS_PER_SEC > 10) return;
+	
+
+	// if interest is < 1, then eval and check out
+	if (interest < 1)
+	{
+		int val = b.eval();
+		evaluated++;
+		if (val > best)
+		{
+			best = val;
+			best_move = to_go;
+			return;
+		}
+	}
 	// go through
 	for (int i=0;i<8;i++)
 		for (int j=1;j<=8;j++)
@@ -48,10 +67,18 @@ void best_moves(board& b, int team, double interest, int* evaluated, clock_t& st
 								for (int i_ = -1; i_ <= 1; i_++)
 									for (int j_ = -1; j_ <= 1; j_++)
 									{
+										if (i_ == 0 && j_ ==0) continue;
 										if (b.is_legal(K,j,(COL)(K+i_),j+j_,team))
 										{
 											// make da move
-
+											board nxt = b;
+											nxt.make_move(K,j,(COL)(K+i_),j+j_);
+											if (interest == INITIAL_INTEREST)
+											{
+												// construct move, since it will be first
+												to_go = mv(make_pair(K,j),make_pair((COL)(K+i_),j+j_),b(K,j),b((COL)(K+i_),j+j_));
+											}
+											best_moves(nxt,team,interest-1,evaluated, start, best, to_go, best_move);
 										}
 									}
 
@@ -59,11 +86,12 @@ void best_moves(board& b, int team, double interest, int* evaluated, clock_t& st
 							case 1:
 							{
 								// straight moves
-								pair<pair<int, int>, pair<int, int> > = b.count_straight(K,j);
+								pair<pair<int, int>, pair<int, int> > space = b.count_straight(K,j);
+
 							}
 							case 2:
 							{
-								pair<pair<int, int>, pair<int, int> > = b.count_diagonal(K,j);
+								pair<pair<int, int>, pair<int, int> > space = b.count_diagonal(K,j);
 							}
 							case 3:
 							{

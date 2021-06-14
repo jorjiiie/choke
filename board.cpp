@@ -181,7 +181,7 @@ bool board::move(COL f_c, int f_r, COL t_c, int t_r)
 			case KING:
 				{
 					// check castling too :((
-					if (f_c == t_c)
+						if (f_c == t_c)
 						return abs(f_r-t_r) == 1;
 					else
 						return abs(f_c-t_c) == 1;
@@ -193,6 +193,7 @@ bool board::move(COL f_c, int f_r, COL t_c, int t_r)
 	}
 	// move has to be diagonal or knight
 	cerr << "NOT STRAIGHT\n";
+	// fix this to accommodate for pawn capturing
 	if (abs(f_c - t_c) == abs(f_r - t_r) && ((*this)(f_c,f_r).get_type() == BISHOP || (*this)(f_c,f_r).get_type() == QUEEN) )
 	{
 		// digaonal
@@ -206,7 +207,36 @@ bool board::move(COL f_c, int f_r, COL t_c, int t_r)
 	int dy = abs(f_r - t_r);
 	return (dx == 2 && dy ==1) || (dx == 1 && dy == 2);
 }	
+pair<pair<int, int>, pair<int, int> > count_straight(COL c, int r)
+{
+	// assume that it's a rook or queen
+	vector<int> vec(4,0);
+	int dx[] = {0,0,1,-1};
+	int dy[] = {1,-1,0,0};
+	for (int i=0;i<4;i++)
+	{
+		int cnt = 1;
+		int tmp_c = c+dx[i];
+		int tmp_r = r+dy[i];
+		while (tmp_c > 0 && tmp_c < 8 && tmp_r > 0 && tmp_c < 8)
+		{
+			if ((*this)((COL)tmp_c,tmp_r).is_piece())
+			{
+				vec[i]=cnt;
+				break;
+			}
+			cnt++;
+			tmp_c+=dx[i];
+			tmp_r+=dy[i];
+		}
+	}
+	pair<int, int> horiz,vert;
+	horiz = make_pair(vec[2],vec[3]);
+	vert = make_pair(vec[1],vec[0]);
 
+	return make_pair(horiz,vert);
+
+}
 
 
 int main()

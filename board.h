@@ -6,6 +6,7 @@
 #include "piece.cpp"
 // #include "search.cpp"
 
+#define DEBUG 0
 
 using namespace std;
 
@@ -44,7 +45,7 @@ class board
 		bool make_move(COL, int, COL, int);
 		bool is_legal(COL, int, COL, int, int);
 		void move_nc(COL, int, COL, int);
-
+		bool in_checkmate(int);
 		// l r, u d
 		pair<pair<int, int>, pair<int, int> > count_straight(COL, int);
 		// lu ld, ru rd

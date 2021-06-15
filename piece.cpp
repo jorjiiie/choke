@@ -9,6 +9,7 @@
 
 using namespace std;
 
+
 enum piece_type {KING, QUEEN, ROOK, BISHOP, KNIGHT, PAWN, NONE};
 
 class piece

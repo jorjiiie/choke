@@ -182,7 +182,7 @@ bool board::in_check(int team)
 					cerr << "straight check\n";
 					return true;
 				}
-
+				if ((*this)((COL)tmp_c,tmp_r).is_piece()) break;
 				tmp_c+=dx[i];
 				tmp_r+=dy[i];
 			}		
@@ -203,7 +203,7 @@ bool board::in_check(int team)
 					cerr << "diag check\n";
 					return true;
 				}
-
+				if ((*this)((COL)tmp_c,tmp_r).is_piece()) break;
 				tmp_c+=dx[i];
 				tmp_r+=dy[i];
 			}		
@@ -259,9 +259,11 @@ bool board::legal_move(COL f_c, int f_r, COL t_c, int t_r)
 
 	if (move(f_c,f_r,t_c,t_r))
 	{
-		// see if makin gmove would put into check
+		
 		if ((*this)(t_c,t_r).get_type() == KING) return false;
 
+
+		// see if makin gmove would put into check
 		board j = (*this);
 		j.move_nc(f_c,f_r,t_c,t_r);
 		if (j.in_check((*this)((COL)f_c,f_r).get_team())) return false;
@@ -294,7 +296,12 @@ bool board::legal_move(COL f_c, int f_r, COL t_c, int t_r)
 }
 bool board::is_legal(COL f_c, int f_r, COL t_c, int t_r, int team)
 {
-	return (move(f_c,f_r,t_c,t_r) && (!in_check(team)));
+	// crazy
+	// absolutely crazy
+	// should be other way around
+	// but o well this is what im dealing with
+	board LOL = (*this);
+	return LOL.legal_move(f_c,f_r,t_c,t_r);
 }
 void board::move_nc(COL f_c, int f_r, COL t_c, int t_r)
 {
@@ -332,7 +339,8 @@ bool board::move(COL f_c, int f_r, COL t_c, int t_r)
 	// king diag
 	if ((*this)(f_c,f_r).get_type() == KING)
 	{
-		return (abs(f_r-t_r) == 1) || (abs(f_c-t_c) == 1);
+		cerr << " " << f_c << " " << f_r << " " << t_c << " " << t_r << "\n";
+		return (abs(f_r-t_r) <= 1) && (abs(f_c-t_c) <= 1);
 	}
 
 	// fix this to accommodate for pawn capturing
@@ -416,6 +424,36 @@ pair<pair<int, int>, pair<int, int> > board::count_diagonal(COL c, int r)
 	return make_pair(left,right);
 
 }
+bool board::in_checkmate(int team)
+{
+	// make every goddamn move for team and see if its still checkmate
+	// absoulte crying death pain 
+	for (int i=0;i<8;i++)
+	{
+		for (int j=1;j<=8;j++)
+		{
+			if ((*this)((COL)i,j).get_team() == team)
+			{
+				// make all the moves it can 
+				// im gonna be really dumb and make this move around every square LMAO LMAO lMAO
+				// thats 64 * 16 -> 1024 operations
+				// honestly that might be the most efficient
+				//hold up
+				for (int k = 0;k<8;k++)
+					for (int l=1;l<=8;l++)
+					{
+						board tmp = (*this);
+						if(tmp.legal_move((COL)i,j,(COL)k,l)) 
+						{
+							cerr << " move " << i << "  " << j << " -> " << k << " " << l << " TYPE: " << (*this)((COL)i,j).get_name() << " " << "\n";
+							return false;
+						}
+					}
+			}
+		}
+	}
+	return true;
+}
 
 void test_board(board& b)
 {
@@ -429,42 +467,48 @@ void test_board(board& b)
 	b(D,8).set_team(1);
 	b(B,2).change_type(PAWN);
 	b(B,2).set_team(0);
+	b(B,7).change_type(QUEEN);
+	b(B,7).set_team(1);
 }
-int main()
+void init_game(board& b)
 {
-	cout << "hello\n";
-	board joe;
 	for (int i=0; i<8; i++)
 	{
 		COL j = (COL)i;
-		joe(j, 2).change_type(PAWN);
-		joe(j, 2).set_team(1);
-		joe(j, 7).change_type(PAWN);
-		joe(j, 7).set_team(0);
+		b(j, 2).change_type(PAWN);
+		b(j, 2).set_team(1);
+		b(j, 7).change_type(PAWN);
+		b(j, 7).set_team(0);
 
 	}
 	// add uncool pieces
 	for (int i=1; i<=8; i+=7)
 	{
-		joe(A, i).change_type(ROOK);
-		joe(A, i).set_team(i&1);
-		joe(B, i).change_type(KNIGHT);
-		joe(B, i).set_team(i&1);
-		joe(C, i).change_type(BISHOP);
-		joe(C, i).set_team(i&1);
-		joe(D, i).change_type(QUEEN);
-		joe(D, i).set_team(i&1);
-		joe(E, i).change_type(KING);
-		joe(E, i).set_team(i&1);
-		joe(F, i).change_type(BISHOP);
-		joe(F, i).set_team(i&1);
-		joe(G, i).change_type(KNIGHT);
-		joe(G, i).set_team(i&1);
-		joe(H, i).change_type(ROOK);
-		joe(H, i).set_team(i&1);
+		b(A, i).change_type(ROOK);
+		b(A, i).set_team(i&1);
+		b(B, i).change_type(KNIGHT);
+		b(B, i).set_team(i&1);
+		b(C, i).change_type(BISHOP);
+		b(C, i).set_team(i&1);
+		b(D, i).change_type(QUEEN);
+		b(D, i).set_team(i&1);
+		b(E, i).change_type(KING);
+		b(E, i).set_team(i&1);
+		b(F, i).change_type(BISHOP);
+		b(F, i).set_team(i&1);
+		b(G, i).change_type(KNIGHT);
+		b(G, i).set_team(i&1);
+		b(H, i).change_type(ROOK);
+		b(H, i).set_team(i&1);
 	}
-
-	joe.print_board();
+}
+int main()
+{
+	if (DEBUG < 1)
+	{
+		// disables cerr stream
+		cerr.rdbuf(NULL);
+	}
 
 	board boe;
 	test_board(boe);
@@ -480,6 +524,16 @@ int main()
 		string a,b;
 		cin >> a >> b;
 		boe.legal_move((COL)(a[0]-'A'),a[1]-'0',(COL)(b[0]-'A'),b[1]-'0');
+		if (boe.in_checkmate(0)) 
+		{
+			cout << "WHITE WINS!!!\n";
+			break;
+		}
+		else if (boe.in_checkmate(1))
+		{
+			cout << "BLACK WINS!!!\n";
+			break;
+		}
 		boe.print_board();
 	}
 }

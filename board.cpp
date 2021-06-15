@@ -560,6 +560,7 @@ int main()
 		cin >> a >> b;
 
 		boe.legal_move((COL)(a[0]-'A'),a[1]-'0',(COL)(b[0]-'A'),b[1]-'0');
+		boe.print_double();
 		if (boe.in_checkmate(0)) 
 		{
 			cout << "WHITE WINS!!!\n";
@@ -570,6 +571,5 @@ int main()
 			cout << "BLACK WINS!!!\n";
 			break;
 		}
-		boe.print_double();
-	}
+			}
 }

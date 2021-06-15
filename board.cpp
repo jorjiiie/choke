@@ -33,6 +33,7 @@ piece& board::operator()(COL c, int row)
 void board::print_board()
 {
 	cout << "hahsn" << endl;
+	cout << "  ABCDEFGH\n";
 	for (int i=0;i<8;i++) 
 	{
 		cout << (8-i) << " ";
@@ -72,14 +73,20 @@ bool board::verify_straight(COL f_c, int f_r, COL t_c, int t_r)
 {
 	if (f_r == t_r)
 	{
+		cerr << "row move\n";
 		COL min_c = min(f_c, t_c);
 		COL max_c = max(f_c, t_c);
 		for (int j = min_c + 1; j < max_c; j++)
+		{
+			cerr << j << " " << f_c << endl;
 			if ((*this)((COL)j,f_r).is_piece()) return false;
+		}
+		cerr << "good move\n";
 		return true;
 	} 
 	else 
 	{
+		cerr << "col move\n";
 		int min_r = min(f_r,t_r);
 		int max_r = max(f_r,t_r);
 		for (int j = min_r + 1; j < max_r; j++)
@@ -132,15 +139,151 @@ bool board::verify_diagonal(COL f_c, int f_r, COL t_c, int t_r)
 }
 bool board::in_check(int team)
 {
-	return false;
 	// find position of king, then look in all move types
-
-}
-bool board::legal_move(COL f_c, int f_r, COL t_c, int t_r, int team)
-{
-	if (move(f_c,f_r,t_c,t_r) && (!in_check(team)))
+	COL c;
+	int r = 0;
+	for (int i=0;i<8;i++)
 	{
+		for (int j=1;j<=8;j++)
+		{
+			if ((*this)((COL)i,j).get_team() == team && (*this)((COL)i,j).get_type() == KING)
+			{
+				c = (COL) i;
+				r = j;
+				break;
+			}	
+		}
+		if (r) break;
+	}
+	// now go in every direction
+	// im actually crying
+	if (r == 0) 
+	{
+		cerr << "somethign is wrong and king wasnt found\n";
+		return true;
+	}
+	// IN PAIN
+	// straight moves, diagonal moves, knight moves
+	{ 
+		
+		// so i can call all my arrays dx/dy
+		// megamind 9009
+		int dx[] = {0,0,1,-1};
+		int dy[] = {1,-1,0,0};
+		// straight
+		for (int i=0;i<4;i++)
+		{
+			int tmp_c = c+dx[i];
+			int tmp_r = r+dy[i];
+			while (tmp_c >= 0 && tmp_c < 8 && tmp_r > 0 && tmp_r <= 8)
+			{
+				if ((*this)((COL)tmp_c,tmp_r).get_team() != team && (*this)((COL)tmp_c,tmp_r).get_type() == QUEEN || (*this)((COL)tmp_c,tmp_r).get_type() == ROOK)
+				{
+					cerr << "straight check\n";
+					return true;
+				}
+
+				tmp_c+=dx[i];
+				tmp_r+=dy[i];
+			}		
+		}
+	}
+	{
+		// diagonal
+		int dx[] = {1,1,-1,-1};
+		int dy[] = {1,-1,1,-1};
+		for (int i=0;i<4;i++)
+		{
+			int tmp_c = c+dx[i];
+			int tmp_r = r+dy[i];
+			while (tmp_c >= 0 && tmp_c < 8 && tmp_r > 0 && tmp_r <= 8)
+			{
+				if ((*this)((COL)tmp_c,tmp_r).get_team() != team && (*this)((COL)tmp_c,tmp_r).get_type() == QUEEN || (*this)((COL)tmp_c,tmp_r).get_type() == BISHOP)
+				{
+					cerr << "diag check\n";
+					return true;
+				}
+
+				tmp_c+=dx[i];
+				tmp_r+=dy[i];
+			}		
+		}
+	}
+	{
+		// knight
+		int dx[] = {-2,-2,-1,-1,1,1,2,2};
+		int dy[] = {1,-1,2,-2,2,-2,1,-1};
+		for (int i=0;i<8;i++)
+		{
+			int tmp_c = c+dx[i];
+			int tmp_r = r+dy[i];
+			if (tmp_c < 0 || tmp_c >= 8 || tmp_r <= 0 || tmp_r > 8) continue;
+			if ((*this)((COL)tmp_c,tmp_r).get_team() != team && (*this)((COL)tmp_c,tmp_r).get_type() == KNIGHT)
+			{
+				cerr << "knoight check\n";
+				return true;
+			}
+		}
+
+	}	
+	{
+		// pawns
+		int dx[] = {1,-1};
+		int dy;
+		if (team == 0)
+		{
+			// black
+			// white pawns go up so its (-1,-1)(1,-1)
+			dy = -1;
+		} else {
+			// white
+			// black pawns go down so its (-1,+1)(+1,+1)
+			dy = 1;
+		}
+		for (int i=0;i<2;i++) {
+
+			int tmp_c = c+dx[i];
+			int tmp_r = r+dy;
+			if (tmp_c < 0 || tmp_c >= 8 || tmp_r <= 0 || tmp_r > 8) continue;
+			if ((*this)((COL)tmp_c,tmp_r).get_team() != team && (*this)((COL)tmp_c,tmp_r).get_type() == PAWN)
+			{
+				cerr << "pawn check\n";
+				return true;
+			}
+		}
+	}
+	return false;
+}
+bool board::legal_move(COL f_c, int f_r, COL t_c, int t_r)
+{
+
+	if (move(f_c,f_r,t_c,t_r))
+	{
+		// see if makin gmove would put into check
+		if ((*this)(t_c,t_r).get_type() == KING) return false;
+
+		board j = (*this);
+		j.move_nc(f_c,f_r,t_c,t_r);
+		if (j.in_check((*this)((COL)f_c,f_r).get_team())) return false;
+
+
+
 		past_moves.push_back(mv(make_pair(f_c,f_r),make_pair(t_c,t_r),(*this)(f_c,f_r),(*this)(t_c,t_r)));
+		if ((*this)(f_c,f_r).get_type() == PAWN)
+		{
+			// check for promotion
+			if ((*this)(f_c,f_r).get_team() == 0)
+			{
+				// black, so if row == 1
+				if (t_r == 1)
+					(*this)(f_c,f_r).change_type(QUEEN);
+
+			} else
+			{
+				if (t_r == 8)
+					(*this)(f_c,f_r).change_type(QUEEN);
+			}
+		}
 		(*this)(f_c,f_r).inc_move_count();
 		(*this)(t_c,t_r)=(*this)(f_c,f_r);
 		(*this)(f_c,f_r) = piece();
@@ -167,6 +310,8 @@ bool board::move(COL f_c, int f_r, COL t_c, int t_r)
 
 	if ((*this)(t_c,t_r).get_team() == (*this)(f_c,f_r).get_team()) return false;
 
+	cerr << "moving!\n";
+
 	if (f_c == t_c || f_r == t_r)
 	{
 		// vertical
@@ -178,26 +323,32 @@ bool board::move(COL f_c, int f_r, COL t_c, int t_r)
 				return verify_straight(f_c,f_r,t_c,t_r);
 			case PAWN:
 				return f_c == t_c && verify_pawn(f_c,f_r,t_c,t_r);
-			case KING:
-				{
-					// check castling too :((
-						if (f_c == t_c)
-						return abs(f_r-t_r) == 1;
-					else
-						return abs(f_c-t_c) == 1;
-
-				}
 			default:
 				return false; // bushop and kngiht canont mooov straight up or duun
 		}
 	}
 	// move has to be diagonal or knight
 	cerr << "NOT STRAIGHT\n";
+	// king diag
+	if ((*this)(f_c,f_r).get_type() == KING)
+	{
+		return (abs(f_r-t_r) == 1) || (abs(f_c-t_c) == 1);
+	}
+
 	// fix this to accommodate for pawn capturing
 	if (abs(f_c - t_c) == abs(f_r - t_r) && ((*this)(f_c,f_r).get_type() == BISHOP || (*this)(f_c,f_r).get_type() == QUEEN) )
 	{
 		// digaonal
 		return verify_diagonal(f_c,f_r,t_c,t_r);
+	}
+	if ((*this)(f_c,f_r).get_type() == PAWN)
+	{
+		cerr << "pawn capture\n";
+		int dy;
+		if ((*this)(f_c,f_r).get_team() == 0) dy = 1;
+		else dy = -1;
+		if (abs(f_c-t_c) == 1 && (f_r-t_r) == dy) return (((*this)(t_c,t_r).get_team()) != ((*this)(f_c,f_r).get_team())) && ((*this)(t_c,t_r).get_team() != -1); // opposite team
+		return false;
 	}
 	// has to be kngith i think
 
@@ -207,7 +358,7 @@ bool board::move(COL f_c, int f_r, COL t_c, int t_r)
 	int dy = abs(f_r - t_r);
 	return (dx == 2 && dy ==1) || (dx == 1 && dy == 2);
 }	
-pair<pair<int, int>, pair<int, int> > count_straight(COL c, int r)
+pair<pair<int, int>, pair<int, int> > board::count_straight(COL c, int r)
 {
 	// assume that it's a rook or queen
 	vector<int> vec(4,0);
@@ -218,7 +369,7 @@ pair<pair<int, int>, pair<int, int> > count_straight(COL c, int r)
 		int cnt = 1;
 		int tmp_c = c+dx[i];
 		int tmp_r = r+dy[i];
-		while (tmp_c > 0 && tmp_c < 8 && tmp_r > 0 && tmp_c < 8)
+		while (tmp_c >= 0 && tmp_c < 8 && tmp_r > 0 && tmp_c <= 8)
 		{
 			if ((*this)((COL)tmp_c,tmp_r).is_piece())
 			{
@@ -235,10 +386,50 @@ pair<pair<int, int>, pair<int, int> > count_straight(COL c, int r)
 	vert = make_pair(vec[1],vec[0]);
 
 	return make_pair(horiz,vert);
+}
+pair<pair<int, int>, pair<int, int> > board::count_diagonal(COL c, int r)
+{
+	vector<int> vec(4,0);
+	int dx[] = {1,1,-1,-1};
+	int dy[] = {1,-1,1,-1};
+	for (int i=0;i<4;i++)
+	{
+		int cnt = 1;
+		int tmp_c = c+dx[i];
+		int tmp_r = r+dy[i];
+		while (tmp_c >= 0 && tmp_c < 8 && tmp_r > 0 && tmp_r <= 8)
+		{
+			if ((*this)((COL)tmp_c,tmp_r).is_piece())
+			{
+				vec[i]=cnt;
+				break;
+			}
+			cnt++;
+			tmp_c+=dx[i];
+			tmp_r+=dy[i];
+		}
+	}
+	pair<int, int> left,right;
+	left = make_pair(vec[2],vec[3]);
+	right = make_pair(vec[0],vec[1]);
+
+	return make_pair(left,right);
 
 }
 
-
+void test_board(board& b)
+{
+	b(A,5).change_type(QUEEN);
+	b(A,5).set_team(1);
+	b(A,1).change_type(KING);
+	b(A,1).set_team(1);
+	b(A,7).change_type(KING);
+	b(A,7).set_team(0);
+	b(D,8).change_type(KNIGHT);
+	b(D,8).set_team(1);
+	b(B,2).change_type(PAWN);
+	b(B,2).set_team(0);
+}
 int main()
 {
 	cout << "hello\n";
@@ -274,8 +465,12 @@ int main()
 	}
 
 	joe.print_board();
-	//cout << joe.eval() << "\n";
 
+	board boe;
+	test_board(boe);
+	boe.print_board();
+	//cout << joe.eval() << "\n";
+	boe.in_check(0);
 	//cout << "\n\njoe";
 	//cout << "\n" << joe(A,1) << "\n";
 	// vector<int> m = joe(A,2).get_moves();
@@ -284,7 +479,7 @@ int main()
 	{
 		string a,b;
 		cin >> a >> b;
-		joe.legal_move((COL)(a[0]-'A'),a[1]-'0',(COL)(b[0]-'A'),b[1]-'0',1);
-		joe.print_board();
+		boe.legal_move((COL)(a[0]-'A'),a[1]-'0',(COL)(b[0]-'A'),b[1]-'0');
+		boe.print_board();
 	}
 }

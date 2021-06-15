@@ -16,7 +16,7 @@ using namespace std;
 // implements the worst stochastic engine you'll ever see
 
 double expected_delta(board, int, double, int, int*);
-void best_moves(board&, int, double, int&, clock_t&, int&, mv&, mv&);
+void best_moves(board&, int, double, int&, clock_t&, int&, mv&, mv&, int);
 mv make_move(board, int);
 void init_search();
 
@@ -24,6 +24,7 @@ void init_search();
 // {
 
 // }
+
 
 void best_moves(board& b, int team, double interest, int& evaluated, clock_t& start, int& best, mv& to_go, mv& best_move)
 {
@@ -72,13 +73,13 @@ void best_moves(board& b, int team, double interest, int& evaluated, clock_t& st
 										{
 											// make da move
 											board nxt = b;
-											nxt.make_move(K,j,(COL)(K+i_),j+j_);
+											nxt.move_nc(K,j,(COL)(K+i_),j+j_);
 											if (interest == INITIAL_INTEREST)
 											{
 												// construct move, since it will be first
 												to_go = mv(make_pair(K,j),make_pair((COL)(K+i_),j+j_),b(K,j),b((COL)(K+i_),j+j_));
 											}
-											best_moves(nxt,team,interest-1,evaluated, start, best, to_go, best_move);
+											best_moves(nxt,team^1,interest-1,evaluated, start, best, to_go, best_move);
 										}
 									}
 
@@ -88,14 +89,23 @@ void best_moves(board& b, int team, double interest, int& evaluated, clock_t& st
 								// straight moves
 								pair<pair<int, int>, pair<int, int> > space = b.count_straight(K,j);
 
+
 							}
 							case 2:
 							{
 								pair<pair<int, int>, pair<int, int> > space = b.count_diagonal(K,j);
+
 							}
 							case 3:
 							{
-
+								// try all 8 knight moves
+								int dx[] = {-2,-2,-1,-1,1,1,2,2};
+								int dy[] = {1,-1,2,-2,2,-2,1,-1};
+								for (int i_=0;i_<8;i_++)
+								{
+									if (!b.is_legal(K,j,(COL)(i+dx[i_]),j+dy[i_],team)) continue;
+									
+								}
 							}
 							case 4:
 							{

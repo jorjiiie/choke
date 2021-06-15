@@ -39,7 +39,7 @@ class board
 		bool verify_pawn(COL, int, COL, int);
 		bool verify_diagonal(COL, int, COL, int);
 		bool in_check(int);
-		bool legal_move(COL, int, COL, int, int);
+		bool legal_move(COL, int, COL, int);
 		bool move(COL, int, COL, int);
 		bool make_move(COL, int, COL, int);
 		bool is_legal(COL, int, COL, int, int);

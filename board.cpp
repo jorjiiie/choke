@@ -51,7 +51,7 @@ void board::print_board()
 }
 void board::print_double()
 {
-	cout << "  ABCDEFGH  ABCDEFGH\n";
+	cout << "  ABCDEFGH     ABCDEFGH\n";
 	for (int i=0;i<8;i++)
 	{
 		cout << (8-i) << " ";
@@ -63,7 +63,8 @@ void board::print_double()
 			cout <<  g_b[i][j].to_col();
 
 		}
-		cout << " ";
+		cout << "   ";
+		cout << (i+1) << " ";
 		for (int j=0;j<8;j++)
 		{
 			if (((7-i)^j)&1) cout << "\033[101;";
@@ -73,7 +74,7 @@ void board::print_double()
 		}
 		cout << "\n";
 	}
-	cout << "  ABCDEFGH  ABCDEFGH\n";
+	cout << "  ABCDEFGH     ABCDEFGH\n";
 }
 void board::manual(COL c, int r)
 {

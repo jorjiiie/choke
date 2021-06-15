@@ -32,7 +32,7 @@ piece& board::operator()(COL c, int row)
 }
 void board::print_board()
 {
-	cout << "hahsn" << endl;
+	// cout << "hahsn" << endl;
 	cout << "  ABCDEFGH\n";
 	for (int i=0;i<8;i++) 
 	{
@@ -48,6 +48,32 @@ void board::print_board()
 		cout << "\n";
 	}
 	cout << "  ABCDEFGH\n";
+}
+void board::print_double()
+{
+	cout << "  ABCDEFGH  ABCDEFGH\n";
+	for (int i=0;i<8;i++)
+	{
+		cout << (8-i) << " ";
+		for (int j=0;j<8;j++)
+		{
+			if ((i^j)&1) cout << "\033[101;";
+			else cout << "\033[102;";
+			cout << "1;";
+			cout <<  g_b[i][j].to_col();
+
+		}
+		cout << " ";
+		for (int j=0;j<8;j++)
+		{
+			if (((7-i)^j)&1) cout << "\033[101;";
+			else cout << "\033[102;";
+			cout << "1;";
+			cout <<  g_b[7-i][j].to_col();
+		}
+		cout << "\n";
+	}
+	cout << "  ABCDEFGH  ABCDEFGH\n";
 }
 void board::manual(COL c, int r)
 {
@@ -511,18 +537,27 @@ int main()
 	}
 
 	board boe;
-	test_board(boe);
-	boe.print_board();
+	init_game(boe);
+	boe.print_double();
 	//cout << joe.eval() << "\n";
 	boe.in_check(0);
 	//cout << "\n\njoe";
 	//cout << "\n" << joe(A,1) << "\n";
 	// vector<int> m = joe(A,2).get_moves();
 	// for (int i=0;i<m.size();i++) cout << i << " " << m[i] << "\n";
+	int turn_num = 1;
 	while(true)
 	{
+		if ((turn_num++) & 1)
+		{
+			cout << "WHITE's TURN: ";
+		}
+		else {
+			cout << "BLACK's TURN: ";
+		}
 		string a,b;
 		cin >> a >> b;
+
 		boe.legal_move((COL)(a[0]-'A'),a[1]-'0',(COL)(b[0]-'A'),b[1]-'0');
 		if (boe.in_checkmate(0)) 
 		{
@@ -534,6 +569,6 @@ int main()
 			cout << "BLACK WINS!!!\n";
 			break;
 		}
-		boe.print_board();
+		boe.print_double();
 	}
 }

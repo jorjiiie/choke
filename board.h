@@ -46,6 +46,7 @@ class board
 		bool is_legal(COL, int, COL, int, int);
 		void move_nc(COL, int, COL, int);
 		bool in_checkmate(int);
+		void print_double();
 		// l r, u d
 		pair<pair<int, int>, pair<int, int> > count_straight(COL, int);
 		// lu ld, ru rd
